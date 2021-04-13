@@ -1,0 +1,14 @@
+{
+  "name": "cattle-database",
+  "private": true,
+  "scripts": {
+    "develop": "gridsome develop",
+    "explore": "gridsome explore",
+    "build": "gridsome build"
+  },
+  "dependencies": {
+    "bootstrap": "4.6.0",
+    "bootstrap-vue": "^2.21.2",
+    "gridsome": "^0.7.0"
+  }
+}
