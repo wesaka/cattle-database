@@ -16,7 +16,6 @@
     <Insert v-if="visible === 'Insert'"/>
     <p v-else-if="visible === 'Update'">Update</p>
     <p v-else-if="visible === 'Lookup'">Lookup</p>
-
   </Layout>
 </template>
 
