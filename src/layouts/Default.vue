@@ -3,18 +3,10 @@
     <b-navbar class="navbar">
       <b-navbar-brand>Cattle Management</b-navbar-brand>
       <b-navbar-nav class="nav">
-        <b-navbar-item>
-          <g-link class="nav__link" to="/">Home</g-link>
-        </b-navbar-item>
-        <b-navbar-item>
-          <g-link class="nav__link" to="/cattle/">Cattle</g-link>
-        </b-navbar-item>
-        <b-navbar-item>
-          <g-link class="nav__link" to="/operations/">Operations</g-link>
-        </b-navbar-item>
-        <b-navbar-item>
-          <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
-        </b-navbar-item>
+        <g-link class="nav__link" to="/">Home</g-link>
+        <g-link class="nav__link" to="/cattle/">Cattle</g-link>
+        <g-link class="nav__link" to="/operations/">Operations</g-link>
+        <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
     </b-navbar>
     <div class="content">
