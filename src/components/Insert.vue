@@ -30,7 +30,6 @@
 </template>
 
 <script>
-
 export default {
   watch: {
     isBorn: function (newVal, oldVal) {

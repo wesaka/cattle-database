@@ -7,19 +7,26 @@
 </template>
 
 <script>
+const axios = require('axios')
+
 export default {
   metaInfo: {
     title: 'About us'
   },
   data() {
     return {
-      items: [
-        { age: 40, first_name: 'Dickerson', last_name: 'Macdonald' },
-        { age: 21, first_name: 'Larsen', last_name: 'Shaw' },
-        { age: 89, first_name: 'Geneva', last_name: 'Wilson' },
-        { age: 38, first_name: 'Jami', last_name: 'Carney' }
-      ]
+      items: []
     }
+  },
+  mounted() {
+    // TODO change the connection details to include password and user and add some more testing data
+
+    axios.get('http://wkaa.heliohost.us/api/db_api.php').then( resp => {
+      console.log(resp)
+      this.items = [resp.data[0]]
+    }).catch( err => {
+      console.error(err)
+    })
   }
 }
 </script>
