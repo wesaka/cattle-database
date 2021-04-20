@@ -13,7 +13,7 @@
       <b-button class="operations-button" v-on:click="visible = 'Lookup'">Lookup</b-button>
     </div>
 
-    <Insert v-if="visible === 'Insert'"/>
+    <p v-if="visible === 'Insert'">Insert</p>
     <p v-else-if="visible === 'Update'">Update</p>
     <p v-else>Lookup</p>
   </Layout>
@@ -21,14 +21,9 @@
 
 <script>
 
-import Insert from '../components/Insert.vue'
-
 export default {
   metaInfo: {
     title: 'About us'
-  },
-  components: {
-    Insert
   },
   data() {
     return {
