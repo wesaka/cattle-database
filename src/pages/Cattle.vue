@@ -3,11 +3,22 @@
     <div>
       <b-table striped hover :items="items"></b-table>
     </div>
+    <div>
+      <b-button block size="lg" class="mb-2" v-b-modal.add-entry-modal>
+        <b-icon icon="plus-circle-fill" aria-label="Add new entry"></b-icon>
+      </b-button>
+    </div>
+    <b-modal id="add-entry-modal" title="Add new entry">
+      <Insert/>
+    </b-modal>
   </Layout>
 </template>
 
 <script>
 const axios = require('axios')
+
+import { BIconPlusCircleFill } from 'bootstrap-vue'
+import Insert from '../components/Insert.vue'
 
 export default {
   metaInfo: {
@@ -17,6 +28,10 @@ export default {
     return {
       items: []
     }
+  },
+  components: {
+    BIconPlusCircleFill,
+    Insert
   },
   mounted() {
     // TODO change the connection details to include password and user and add some more testing data
@@ -30,3 +45,7 @@ export default {
   }
 }
 </script>
+
+<style>
+
+</style>

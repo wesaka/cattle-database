@@ -8,19 +8,19 @@
     This v-for has some v-if's for sorting out all the types of input and a final catchall that defaults to number
     -->
     <b-row class="my-1" v-for="field in fields" :key="field">
-      <b-col sm="2">
+      <b-col sm="4">
         <label :for="`field-${field}`">{{ field }}:</label>
       </b-col>
-      <b-col sm="10">
+      <b-col sm="8">
         <b-form-radio-group v-if="field === 'Origin'" id="radio-origin" v-model="isBorn">
           <b-form-radio value="true" >Born in-premises</b-form-radio>
           <b-form-radio value="false" >Bought from a third party</b-form-radio>
         </b-form-radio-group>
         <b-form-datepicker v-else-if="field === 'Birthdate' || field === 'Date received'" :id="`field-${field}`"></b-form-datepicker>
         <div v-else-if="field === 'Parents'" style="display: flex">
-          <b-form-input :id="`field-${field}`" placeholder="Mother Unique ID" style="flex: 1"></b-form-input>
+          <b-form-input :id="`field-${field}`" placeholder="Mother UID" style="flex: 1"></b-form-input>
           <span style="flex: 0.01"></span>
-          <b-form-input placeholder="Father Unique ID" style="flex: 1"></b-form-input>
+          <b-form-input placeholder="Father UID" style="flex: 1"></b-form-input>
           <!-- Soon this will allow for the user to select from a dropdown or something like that the parents, no need for unique IDS -->
         </div>
         <b-form-input v-else :id="`field-${field}`" :type="'number'"></b-form-input> <!-- This is the catchall -->
@@ -43,7 +43,8 @@ export default {
           'Weight at Reception',
           'Birthdate',
           'Date received',
-          'Parents'
+          'Parents',
+          'Breed'
         ]
       } else {
         this.fields = [
@@ -51,7 +52,8 @@ export default {
           'Tag Number',
           'Weight at Birth',
           'Birthdate',
-          'Parents'
+          'Parents',
+          'Breed'
         ]
       }
     }

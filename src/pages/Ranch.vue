@@ -1,6 +1,6 @@
 <template>
   <Layout>
-    <h2>Ranch Information</h2>
+    <h2>My Ranches</h2>
     <b-container fluid class="form">
       <b-row class="my-1" v-for="field in fields" :key="field[0]">
         <b-col sm="2">
@@ -20,18 +20,21 @@
 
 export default {
   metaInfo: {
-    title: 'Ranch Information'
+    title: 'My Ranches'
   },
   data() {
     return {
       name: 'Insert',
       isBorn: "true",
       fields: [
-          ['Owner Full Name', 'Ex. John Doe',],
-          ['Owner ID Number', 'Individual or Company ID Number'],
-          ['State Registration', 'Registration Given by the State for Operating the Ranch'],
-          ['Land Identification Number', 'If applicable'],
-          ['Address', 'Full address with street name and city or locality'],
+          ['Ranch Name', 'A name for your ranch'],
+          ['Local Registration Number', 'Registration number or id given by the State or local government office'],
+          ['Tax Number', 'A number that is used for tax purposes, if applicable'],
+          ['Street', 'Street or locality name'],
+          ['Street Number', 'Street number of leave empty if not applicable'],
+          ['City', 'City'],
+          ['State', 'State or Province'],
+          ['Country', 'Country'],
           ['Reference Point', 'If applicable'],
           ['Latitude Longitude', 'Ex. -25.123456, -50.123456'],
           ['Phone Number', 'Ex. (123)555-1234'],

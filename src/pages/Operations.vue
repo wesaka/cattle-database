@@ -15,11 +15,12 @@
 
     <Insert v-if="visible === 'Insert'"/>
     <p v-else-if="visible === 'Update'">Update</p>
-    <p v-else-if="visible === 'Lookup'">Lookup</p>
+    <p v-else>Lookup</p>
   </Layout>
 </template>
 
 <script>
+
 import Insert from '../components/Insert.vue'
 
 export default {
