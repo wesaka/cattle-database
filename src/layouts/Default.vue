@@ -22,6 +22,17 @@
     <div class="content">
       <slot/>
     </div>
+
+    <b-modal ref="modal-incorrect-password" id="modal-incorrect-password" hide-footer>
+      <template #modal-title>
+        <b-icon-exclamation-circle />
+        Attention
+      </template>
+      <div class="d-block text-center">
+        <p>User already exists and the password is incorrect.</p>
+      </div>
+      <b-button block class="mt-3" @click="$bvModal.hide('modal-incorrect-password')">Dismiss</b-button>
+    </b-modal>
   </div>
 </template>
 
@@ -29,12 +40,14 @@
 query {
   metadata {
     siteName
+    DB_URL
   }
 }
 </static-query>
 
 <script>
-import { eraseCookie, setCookie, getCookie } from "../utilities/cookieManager";
+import axios from 'axios'
+import { eraseCookie, setCookie, getCookie } from "../utilities/cookieManager"
 
 export default {
   data() {
@@ -55,12 +68,7 @@ export default {
   // },
   methods: {
     logout() {
-      eraseCookie('username')
-      eraseCookie('password')
-      this.credentials = undefined
-      this.username = undefined
-      this.password = undefined
-      console.log(this.credentials)
+      this.eraseCredentials()
     },
     login() {
       setCookie('username', this.username)
@@ -69,19 +77,30 @@ export default {
       const u = getCookie('username')
       const p = getCookie('password')
 
-      console.log(this.getDbUrl())
-
       if (u === undefined || u === '' || p === undefined || p === '') {
         return
       }
 
-      // TODO This is where I need to set the login details and get from the database
+      // I'm setting this up because I might need it?
       this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
-      console.log(this.credentials)
 
-      if (this.credentials !== undefined) {
-        this.hideDropdown()
-      }
+      axios.post(this.$static.metadata.DB_URL + 'auth.php', {username:this.username, password:this.password}, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+        if (resp.data === 1) {
+          // If the response is 1 that means we are logged in (and created a new user if it didn't exist before)!
+          // Lastly, hide the dropdown
+          this.hideDropdown()
+        } else {
+          // If not, it means that the user already exists
+          this.eraseCredentials()
+
+          // Raise an alert to the user
+          this.$refs["modal-incorrect-password"].show()
+        }
+      }).catch( err => {
+        console.error(err)
+      })
+
+
     },
     hideDropdown() {
       this.okToHide = true
@@ -94,6 +113,13 @@ export default {
       } else {
         bvEvent.preventDefault()
       }
+    },
+    eraseCredentials() {
+      eraseCookie('username')
+      eraseCookie('password')
+      this.credentials = undefined
+      this.username = undefined
+      this.password = undefined
     }
   }
 }
