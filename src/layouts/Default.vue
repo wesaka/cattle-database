@@ -69,6 +69,8 @@ export default {
       const u = getCookie('username')
       const p = getCookie('password')
 
+      console.log(this.getDbUrl())
+
       if (u === undefined || u === '' || p === undefined || p === '') {
         return
       }

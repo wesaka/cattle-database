@@ -40,6 +40,14 @@
   </Layout>
 </template>
 
+<static-query>
+query {
+  metadata {
+    DB_URL
+  }
+}
+</static-query>
+
 <script>
 const axios = require('axios')
 
@@ -71,6 +79,11 @@ export default {
   metaInfo: {
     title: 'About us'
   },
+  computed: {
+    db_url: function () {
+      return this.$static.metadata.DB_URL
+    }
+  },
   watch: {
     isBorn: function (newVal, oldVal) {
       console.log(newVal, oldVal)
@@ -101,22 +114,18 @@ export default {
       this.modalHandleSubmit()
     },
     modalHandleSubmit() {
-      // Submit the insert query
-      let input_elements = document.querySelectorAll('input[id^="field-"], div[id^="field-"], button[id^="field-"]')
-      input_elements.forEach((element) => {
-        console.log(element)
-      })
-
-      console.log(this.fields)
-      // TODO make this work as intended
+      // Send the insert query with the values from fields
       let toSend = {}
       for (const key in this.fields) {
         if (this.fields[key][0] !== '' && this.fields[key][0] !== undefined) {
-          toSend[key] = this.fields[key][0];
+          toSend[key] = `'${this.fields[key][0]}'` // Send as string so it doesn't mess up the date
         }
       }
 
-      axios.post('http://awesley.atwebpages.com/test_insert.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+      // Manually add owner while we don't have the login TODO fix it
+      toSend['owner'] = '1'
+
+      axios.post(this.db_url + 'test_insert.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
         console.log(resp)
       }).catch( err => {
         console.error(err)
@@ -126,7 +135,7 @@ export default {
   mounted() {
     // TODO change the connection details to include password and user and add some more testing data
 
-    axios.get('http://wkaa.heliohost.us/api/db_api.php').then( resp => {
+    axios.get(this.db_url + 'db_api.php').then( resp => {
       console.log(resp)
       this.items = [resp.data[0]]
     }).catch( err => {
