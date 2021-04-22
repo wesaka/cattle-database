@@ -8,6 +8,16 @@
         <g-link class="nav__link" to="/operations/">Operations</g-link>
         <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
+      <b-navbar-nav class="nav ml-auto">
+        <b-button v-if="credentials" variant="outline-danger" v-on:click="logout">Logout</b-button>
+        <b-dropdown v-else text="Register or Login" ref="dropdown" @hide="controlDropdownHide" v-on:click="hideDropdown">
+          <b-dropdown-form>
+            <b-form-input placeholder="Username" v-model="username" @submit.stop.prevent required></b-form-input>
+            <b-form-input placeholder="Password" class="mt-1" v-model="password" type="password" required></b-form-input>
+            <b-button @click="login" class="mt-1">OK</b-button>
+          </b-dropdown-form>
+        </b-dropdown>
+      </b-navbar-nav>
     </b-navbar>
     <div class="content">
       <slot/>
@@ -22,6 +32,70 @@ query {
   }
 }
 </static-query>
+
+<script>
+import { eraseCookie, setCookie, getCookie } from "../utilities/cookieManager";
+
+export default {
+  data() {
+    return {
+      username: undefined,
+      password: undefined,
+      credentials: undefined,
+      okToHide: false
+    }
+  },
+  // watch: {
+  //   credentials: function () {
+  //     if (this.credentials === undefined) {
+  //       this.username = undefined
+  //       this.password = undefined
+  //     }
+  //   }
+  // },
+  methods: {
+    logout() {
+      eraseCookie('username')
+      eraseCookie('password')
+      this.credentials = undefined
+      this.username = undefined
+      this.password = undefined
+      console.log(this.credentials)
+    },
+    login() {
+      setCookie('username', this.username)
+      setCookie('password', this.password)
+
+      const u = getCookie('username')
+      const p = getCookie('password')
+
+      if (u === undefined || u === '' || p === undefined || p === '') {
+        return
+      }
+
+      // TODO This is where I need to set the login details and get from the database
+      this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
+      console.log(this.credentials)
+
+      if (this.credentials !== undefined) {
+        this.hideDropdown()
+      }
+    },
+    hideDropdown() {
+      this.okToHide = true
+      this.$refs.dropdown.hide()
+      // TODO fix the dropdown hide
+    },
+    controlDropdownHide(bvEvent) {
+      if (this.okToHide) {
+        this.okToHide = false
+      } else {
+        bvEvent.preventDefault()
+      }
+    }
+  }
+}
+</script>
 
 <style>
 body {

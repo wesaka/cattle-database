@@ -21,23 +21,18 @@
         Each set of keys have the pertinent values for each origin
         This v-for has some v-if's for sorting out all the types of input and a final catchall that defaults to number
         -->
-        <b-row class="my-1" v-for="field in fields" :key="field">
+        <b-row class="my-1" v-for="field in Object.keys(fields)" :key="field">
           <b-col sm="4">
-            <label :for="`field-${field}`">{{ field }}:</label>
+            <label :for="`field-${field}`">{{ fields[field][1] }}:</label>
           </b-col>
           <b-col sm="8">
-            <b-form-radio-group v-if="field === 'Origin'" :id="`field-${field}`" v-model="isBorn">
+            <b-form-radio-group v-if="field === 'origin'" :id="`field-${field}`" v-model="isBorn">
               <b-form-radio value="true" >Born in-premises</b-form-radio>
               <b-form-radio value="false" >Bought from a third party</b-form-radio>
             </b-form-radio-group>
-            <b-form-datepicker v-else-if="field === 'Birthdate' || field === 'Date received'" :id="`field-${field}`"></b-form-datepicker>
-            <div v-else-if="field === 'Parents'" style="display: flex">
-              <b-form-input :id="`field-${field}`" placeholder="Mother UID" style="flex: 1"></b-form-input>
-              <span style="flex: 0.02"></span>
-              <b-form-input :id="`field=${field}-1`" placeholder="Father UID" style="flex: 1"></b-form-input>
-              <!-- Soon this will allow for the user to select from a dropdown or something like that the parents, no need for unique IDS -->
-            </div>
-            <b-form-input v-else :id="`field-${field}`" :type="'text'"></b-form-input> <!-- This is the catchall -->
+            <b-form-datepicker v-else-if="field.includes('date')" :id="`field-${field}`" v-model="fields[field][0]"></b-form-datepicker>
+            <b-form-checkbox v-else-if="field.includes('purebred')" :id="`field-${field}`" v-model="fields[field][0]"></b-form-checkbox>
+            <b-form-input v-else :id="`field-${field}`" :type="'number'" v-model="fields[field][0]"></b-form-input> <!-- This is the catchall -->
           </b-col>
         </b-row>
       </b-container>
@@ -50,6 +45,28 @@ const axios = require('axios')
 
 import { BIconPlusCircleFill } from 'bootstrap-vue'
 
+// Using objects for the filed make it easier to get the values from the form, as we can use v-model on the objects
+// The objects are structured in a way that the column name in the database is the same as the keys for the values
+// The values have the label value that is going to be present in the front end and the "value value" for the key
+const bornFields = {
+  origin: ['', 'Origin'],
+  tag: ['', 'Tag Number'],
+  weight_birth: ['', 'Weight at Birth'],
+  date_born: ['', 'Birthdate'],
+  parent_1: ['', 'Parent 1'],
+  parent_2: ['', 'Parent 2'],
+  breed: ['', 'Breed'],
+  purebred: ['', 'Purebred?']
+}
+
+const additionalBoughtFields = {
+  price_bought: ['', 'Price Bought'],
+  weight_received: ['', 'Weight at Reception'],
+  date_bought: ['', 'Date received']
+}
+
+const boughtFields = {...bornFields, ...additionalBoughtFields}
+
 export default {
   metaInfo: {
     title: 'About us'
@@ -58,26 +75,9 @@ export default {
     isBorn: function (newVal, oldVal) {
       console.log(newVal, oldVal)
       if (oldVal === "true") {
-        this.fields = [
-          'Origin',
-          'Tag Number',
-          'Price Bought',
-          'Weight at Birth',
-          'Weight at Reception',
-          'Birthdate',
-          'Date received',
-          'Parents',
-          'Breed'
-        ]
+        this.fields = boughtFields
       } else {
-        this.fields = [
-          'Origin',
-          'Tag Number',
-          'Weight at Birth',
-          'Birthdate',
-          'Parents',
-          'Breed'
-        ]
+        this.fields = bornFields
       }
     }
   },
@@ -86,14 +86,7 @@ export default {
       items: [],
       name: 'Insert',
       isBorn: "true",
-      fields: [
-        'Origin',
-        'Tag Number',
-        'Weight at Birth',
-        'Birthdate',
-        'Parents',
-        'Breed'
-      ]
+      fields: bornFields
     }
   },
   components: {
@@ -109,12 +102,21 @@ export default {
     },
     modalHandleSubmit() {
       // Submit the insert query
-      let input_elements = document.querySelectorAll('[id^="field-"]')
+      let input_elements = document.querySelectorAll('input[id^="field-"], div[id^="field-"], button[id^="field-"]')
       input_elements.forEach((element) => {
-        console.log(element.id)
+        console.log(element)
       })
+
+      console.log(this.fields)
       // TODO make this work as intended
-      axios.post('http://awesley.atwebpages.com/test_insert.php').then( resp => {
+      let toSend = {}
+      for (const key in this.fields) {
+        if (this.fields[key][0] !== '' && this.fields[key][0] !== undefined) {
+          toSend[key] = this.fields[key][0];
+        }
+      }
+
+      axios.post('http://awesley.atwebpages.com/test_insert.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
         console.log(resp)
       }).catch( err => {
         console.error(err)
