@@ -9,7 +9,7 @@
         <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
       <b-navbar-nav class="nav ml-auto">
-        <b-button v-if="credentials" variant="outline-danger" v-on:click="logout">Logout</b-button>
+        <b-button v-if="credentials" :key="credentials" variant="outline-danger" v-on:click="logout">Logout</b-button>
         <b-dropdown v-else text="Register or Login" ref="dropdown" @hide="controlDropdownHide" v-on:click="hideDropdown">
           <b-dropdown-form>
             <b-form-input placeholder="Username" v-model="username" @submit.stop.prevent required></b-form-input>
@@ -58,21 +58,16 @@ export default {
       okToHide: false
     }
   },
-  // watch: {
-  //   credentials: function () {
-  //     if (this.credentials === undefined) {
-  //       this.username = undefined
-  //       this.password = undefined
-  //     }
-  //   }
-  // },
+  mounted() {
+    this.loadCredentials()
+  },
   methods: {
     logout() {
       this.eraseCredentials()
     },
     login() {
-      setCookie('username', this.username)
-      setCookie('password', this.password)
+      setCookie('username', this.username, 1)
+      setCookie('password', this.password, 1)
 
       const u = getCookie('username')
       const p = getCookie('password')
@@ -85,11 +80,8 @@ export default {
       this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
 
       axios.post(this.$static.metadata.DB_URL + 'auth.php', {username:this.username, password:this.password}, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
-        if (resp.data === 1) {
+        if (resp.data === 0) {
           // If the response is 1 that means we are logged in (and created a new user if it didn't exist before)!
-          // Lastly, hide the dropdown
-          this.hideDropdown()
-        } else {
           // If not, it means that the user already exists
           this.eraseCredentials()
 
@@ -102,6 +94,21 @@ export default {
 
 
     },
+    loadCredentials() {
+      const u = getCookie('username')
+      const p = getCookie('password')
+
+      if (u !== undefined && u !== '' && p !== undefined && p !== '') {
+        this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
+      }
+    },
+    eraseCredentials() {
+      eraseCookie('username')
+      eraseCookie('password')
+      this.credentials = undefined
+      this.username = undefined
+      this.password = undefined
+    },
     hideDropdown() {
       this.okToHide = true
       this.$refs.dropdown.hide()
@@ -113,13 +120,6 @@ export default {
       } else {
         bvEvent.preventDefault()
       }
-    },
-    eraseCredentials() {
-      eraseCookie('username')
-      eraseCookie('password')
-      this.credentials = undefined
-      this.username = undefined
-      this.password = undefined
     }
   }
 }
