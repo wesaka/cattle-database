@@ -1,7 +1,7 @@
 <template>
   <div class="grid-container">
     <b-navbar class="navbar">
-      <b-navbar-brand>Cattle Management</b-navbar-brand>
+      <b-navbar-brand>Ranch Manager</b-navbar-brand>
       <b-navbar-nav class="nav">
         <g-link class="nav__link" to="/">Home</g-link>
         <g-link class="nav__link" to="/cattle/">Cattle</g-link>
@@ -9,11 +9,11 @@
         <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
       <b-navbar-nav class="nav ml-auto">
-        <b-button v-if="loggedIn" :key="loggedIn" variant="outline-danger" @click="eraseCredentials">Logout</b-button>
+        <b-button v-if="loggedIn" :key="loggedIn" variant="outline-danger" v-on:click="eraseCredentials" href="/">Logout</b-button>
         <b-dropdown v-else text="Register or Login" ref="dropdown" @hide="controlDropdownHide" v-on:click="hideDropdown">
           <b-dropdown-form>
             <b-form-input placeholder="Username" v-model="username" @submit.stop.prevent required></b-form-input>
-            <b-form-input placeholder="Password" v-model="password" class="mt-1" type="password" required></b-form-input>
+            <b-form-input placeholder="Password" v-model="password" class="mt-1" type="password" autocomplete="on" required></b-form-input>
             <b-button @click="login" class="mt-1">OK</b-button>
           </b-dropdown-form>
         </b-dropdown>
@@ -86,18 +86,20 @@ export default {
           setCookie('uid', resp.data.toString(), 1);
           this.loggedIn = true
           this.hideDropdown()
+
+          // Calling a reload is far simpler than anything I would have to do here
+          location.reload()
         }
       }).catch( err => {
         console.error(err)
       })
-
-
     },
     loadCredentials() {
       const u = getCookie('username')
       const p = getCookie('password')
 
-      if (u !== undefined && u !== '' && p !== undefined && p !== '') {
+      // Javascript is dumb, this is dumb
+      if (u !== undefined && u !== '' && u !== null && p !== undefined && p !== '' && p !== null) {
         this.username = u;
         this.password = p;
         this.loggedIn = true

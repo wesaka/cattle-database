@@ -64,7 +64,7 @@ query {
 </static-query>
 
 <script>
-import {getCookie} from "../utilities/cookieManager";
+import {getCookie, setCookie, eraseCookie} from "../utilities/cookieManager";
 
 const axios = require('axios')
 
@@ -117,7 +117,7 @@ export default {
   watch: {
     isBorn: function (newVal, oldVal) {
       console.log(newVal, oldVal)
-      if (oldVal === "true") {
+      if (newVal === "false") {
         this.fields = boughtFields
       } else {
         this.fields = bornFields
@@ -128,6 +128,16 @@ export default {
     BIconPlusCircleFill
   },
   methods: {
+    updateTable(resp) {
+      // I don't know why, but the response from server have indexes and my table doesn't play nice with them
+      // So I have to do this
+      let respItems = []
+      resp.data.forEach(row => {
+        respItems = respItems.concat(row)
+      })
+      this.items = respItems
+      this.isBusy = false
+    },
     /*** Handlers for the insert new entry modal ***/
     modalHandleOK(bvModalEvt) {
       // Prevent the modal from closing
@@ -141,6 +151,7 @@ export default {
         // Trigger the submit handler
         // If "editData" is true, then run an UPDATE on server, if not, run INSERT
         this.modalHandleSubmit()
+        this.clearFields()
       }
     },
     modalHandleSubmit() {
@@ -166,10 +177,18 @@ export default {
         // First set editData to false, so it doesn't mess up with next data entries
         this.editData = false
 
+        // As we are updating we need to send the uid along with the request
+        // I am getting the uid from cookie because
+        toSend['uid'] = getCookie('cattleUid')
+        eraseCookie('cattleUid')
+
+        console.log(toSend)
+
         axios.post(this.db_url + 'edit_cattle_entry.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
           console.log(resp)
           // Update the data in the table according to the new data
-
+          this.updateTable(resp)
+          this.showEntryModal = false
         }).catch( err => {
           console.error(err)
         })
@@ -209,46 +228,80 @@ export default {
       this.disableTextFields = true
     },
     editEntry(uid) {
-      // Open a modal for editing data, update on database and then return the updated data for rendering
-      this.showEntryModal = true
-      this.disableTextFields = false
-      this.editData = true
+      // There are actually two operations for this
+      // 1st get data from the database regarding this UID for showing to the user (that's why we can't do it all on mysql)
+      // This is done so we don't need to store every single entry locally in the website (Imagine a thousand cattle)
+      // 2nd is to get that data and perform an update on mysql
+      axios.post(this.db_url + 'select_data.php', JSON.stringify({
+        db_url:this.$static.metadata.DB_URL,
+        // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
+        fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
+        uid: uid
+      }), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+
+        console.log(resp)
+        let respItems = []
+        resp.data.forEach(row => {
+          respItems = respItems.concat(row)
+        })
+        this.setFields(respItems)
+
+        // Open a modal for editing data, update on database and then return the updated data for rendering
+        this.showEntryModal = true
+        this.disableTextFields = false
+        this.editData = true
+        setCookie('cattleUid', uid)
+      }).catch( err => {
+        console.error(err)
+      })
+
     },
     deleteEntry(uid) {
       // Delete the entry in the database and return the updated data for rendering
       // DO NOT PASS THE DATABASE URL WITH THE FUNCTION - PHP IS WEIRD
       axios.post(this.db_url + 'delete_cattle_entry.php', {db_url:this.$static.metadata.DB_URL, uid:uid}, { headers: { 'Content-Type': 'application/json' } }).then( resp => {
-        console.log(resp)
+        const response = resp.data.toString()
         // Update the data in the table according to the new data
+        if (response === "1") {
+          for (let i = 0; i < this.items.length; i++) {
+            if (this.items[i].UID === uid) {
+              this.items.splice(i, 1)
+            }
+          }
+        }
       }).catch( err => {
         console.error(err)
       })
+    },
+    clearFields() {
+      Object.keys(this.fields).forEach(key => {
+        this.fields[key][0] = ''
+      })
+    },
+    setFields(values) {
+      console.log(values[0])
+      Object.keys(values[0]).forEach(key => {
+        console.log(key)
+        console.log("Values key", values[0][key.toString()], "Fields key", this.fields[key.toString()])
+        this.fields[key][0] = values[0][key]
+      })
+      console.log(this.fields)
     }
   },
   mounted() {
-    // TODO change the connection details to include password and user and add some more testing data
-
-    // TODO fix this piece of shit
-    console.log(JSON.stringify({db_url:this.db_url, username: getCookie('username')}))
     this.isBusy = true
-    axios.post(this.db_url + 'select_cattle.php', JSON.stringify({db_url:this.db_url, username: getCookie('username')}), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+
+    // Sending the post request follows the following logic
+    // 1st the database url, to discern if we are in production or development
+    // 2nd the values JSON.stringify'ed
+    // 3rd the username
+    // 4th headers Content-Type application/json
+    axios.post(this.db_url + 'select_data.php', JSON.stringify({db_url:this.db_url, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
       console.log(resp)
-      // I don't know why, but the response from server have indexes and my table doesn't play nice with them
-      // So I have to do this
-      let respItems = []
-      resp.data.forEach(row => {
-        console.log(row)
-        respItems = respItems.concat(row)
-      })
-      this.items = respItems
-      this.isBusy = false
+      this.updateTable(resp)
     }).catch( err => {
       console.error(err)
     })
   }
 }
 </script>
-
-<style>
-
-</style>

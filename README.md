@@ -1,6 +1,6 @@
 # DB Project - Task 1
 
-# Cattle Management
+# Ranch Manager
 
 ## Group
 
@@ -8,7 +8,7 @@ Alvacir Wesley Kalatai Alberti
 
 ## Purpose
 
-To store data about cattle.
+To store the data of the day-to-day operations of a cattle ranch (more coming soon).
 
 Cattle farming is a tradition in many parts of the world, making up a billion dollar industry, and central to that success, are the animals - many animals mind you, in the world, the total cattle population is estimated to be equal to 987.5 million heads (World Cattle Inventory: Ranking Of Countries - USDA), some places, like my home country Brazil, have actually more cattle than people. Gone was the time where a cattle ranch would buy calves from a neighbor, just to put them in their land to feed and raise until the selling point was reached, without keeping any kind of record for the calves, or tracking the weight progression of the cow. Nowadays, cattle ranches have adopted the practices of the information age, as everything is measured and tracked. From the moment the calf steps for the first time in the ranch, it's weight is recorded, where it came from and what to expect from it comes from who sold it, every day the calf spent in the ranch, the amount of food it consumes, the weight it has gained, all the expenses it represents are also noted.
 
