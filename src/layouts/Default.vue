@@ -9,11 +9,11 @@
         <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
       <b-navbar-nav class="nav ml-auto">
-        <b-button v-if="credentials" :key="credentials" variant="outline-danger" v-on:click="logout">Logout</b-button>
+        <b-button v-if="loggedIn" :key="loggedIn" variant="outline-danger" @click="eraseCredentials">Logout</b-button>
         <b-dropdown v-else text="Register or Login" ref="dropdown" @hide="controlDropdownHide" v-on:click="hideDropdown">
           <b-dropdown-form>
             <b-form-input placeholder="Username" v-model="username" @submit.stop.prevent required></b-form-input>
-            <b-form-input placeholder="Password" class="mt-1" v-model="password" type="password" required></b-form-input>
+            <b-form-input placeholder="Password" v-model="password" class="mt-1" type="password" required></b-form-input>
             <b-button @click="login" class="mt-1">OK</b-button>
           </b-dropdown-form>
         </b-dropdown>
@@ -54,39 +54,38 @@ export default {
     return {
       username: undefined,
       password: undefined,
-      credentials: undefined,
-      okToHide: false
+      okToHide: false,
+      loggedIn: false
     }
   },
   mounted() {
     this.loadCredentials()
   },
   methods: {
-    logout() {
-      this.eraseCredentials()
-    },
     login() {
-      setCookie('username', this.username, 1)
-      setCookie('password', this.password, 1)
-
-      const u = getCookie('username')
-      const p = getCookie('password')
+      const u = this.username
+      const p = this.password
 
       if (u === undefined || u === '' || p === undefined || p === '') {
         return
       }
 
-      // I'm setting this up because I might need it?
-      this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
-
-      axios.post(this.$static.metadata.DB_URL + 'auth.php', {username:this.username, password:this.password}, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+      axios.post(this.$static.metadata.DB_URL + 'auth.php', {db_url:this.$static.metadata.DB_URL, username:u, password:p}, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
         if (resp.data === 0) {
-          // If the response is 1 that means we are logged in (and created a new user if it didn't exist before)!
           // If not, it means that the user already exists
           this.eraseCredentials()
+          this.loggedIn = false
 
           // Raise an alert to the user
           this.$refs["modal-incorrect-password"].show()
+        } else {
+          // If the response is anything other than 0 that means we are logged in (and created a new user if it didn't exist before)!
+          // The number it returns from the server is the UID of the owner - used for inserting new data in the DB
+          setCookie('username', u, 1)
+          setCookie('password', p, 1)
+          setCookie('uid', resp.data.toString(), 1);
+          this.loggedIn = true
+          this.hideDropdown()
         }
       }).catch( err => {
         console.error(err)
@@ -99,15 +98,18 @@ export default {
       const p = getCookie('password')
 
       if (u !== undefined && u !== '' && p !== undefined && p !== '') {
-        this.credentials = 'username:' + getCookie('username') + ';' + 'password:' + getCookie('password')
+        this.username = u;
+        this.password = p;
+        this.loggedIn = true
       }
     },
     eraseCredentials() {
       eraseCookie('username')
       eraseCookie('password')
-      this.credentials = undefined
+      eraseCookie('uid')
       this.username = undefined
       this.password = undefined
+      this.loggedIn = false
     },
     hideDropdown() {
       this.okToHide = true
