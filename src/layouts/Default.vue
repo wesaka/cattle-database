@@ -69,9 +69,9 @@ export default {
         return
       }
 
-      axios.post(this.$static.metadata.DB_URL + 'auth.php', {db_url:this.$static.metadata.DB_URL, username:u, password:p}, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+      axios.post(this.$static.metadata.DB_URL + 'auth.php', JSON.stringify({db_url:'https://tardy-cleanser.000webhostapp.com', username:u, password:p}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         if (resp.data === 0) {
-          // If not, it means that the user already exists
+          // If not, it means that the user already exists or the request was unsuccessful
           this.eraseCredentials()
           this.loggedIn = false
 

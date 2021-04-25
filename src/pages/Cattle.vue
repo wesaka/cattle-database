@@ -245,7 +245,7 @@ export default {
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
         uid: uid
-      }), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+      }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
 
         console.log(resp)
         let respItems = []
@@ -274,7 +274,7 @@ export default {
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
         uid: uid
-      }), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+      }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
 
         console.log(resp)
         let respItems = []
@@ -296,7 +296,7 @@ export default {
     deleteEntry(uid) {
       // Delete the entry in the database and return the updated data for rendering
       // DO NOT PASS THE DATABASE URL WITH THE FUNCTION - PHP IS WEIRD
-      axios.post(this.db_url + 'delete_cattle_entry.php', {db_url:this.$static.metadata.DB_URL, uid:uid}, { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+      axios.post(this.db_url + 'delete_cattle_entry.php', {db_url:this.$static.metadata.DB_URL, uid:uid}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         const response = resp.data.toString()
         // Update the data in the table according to the new data
         if (response === "1") {
@@ -323,7 +323,7 @@ export default {
     },
     handleSell() {
       console.log(JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}))
-      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         console.log(resp)
         // resp.data should be 1 when the transaction is sucessfull
         // Setting a new owner is responsability of the sold table transaction "update_owner"
@@ -354,8 +354,8 @@ export default {
     // 1st the database url, to discern if we are in production or development
     // 2nd the values JSON.stringify'ed
     // 3rd the username
-    // 4th headers Content-Type application/json
-    axios.post(this.db_url + 'select_data.php', JSON.stringify({db_url:this.db_url, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+    // 4th headers Content-Type application/x-www-form-urlencoded
+    axios.post(this.db_url + 'select_data.php', JSON.stringify({db_url:this.db_url, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
       console.log(resp)
       this.updateTable(resp)
     }).catch( err => {
