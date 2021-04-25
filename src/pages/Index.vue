@@ -2,7 +2,7 @@
   <Layout>
 
     <!-- Learn how to use images here: https://gridsome.org/docs/images -->
-    <h1><span style="font-size: 70px">&#128004;</span>    Hello world</h1>
+    <h1><span style="font-size: 70px">&#128004;</span>    Ranch Manager v.0</h1>
 
     <h3>What is this website?</h3>
     <p>
@@ -17,7 +17,7 @@
 <script>
 export default {
   metaInfo: {
-    title: 'Hello, world!'
+    title: 'Ranch Manager'
   }
 }
 </script>
