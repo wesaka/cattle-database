@@ -12,6 +12,7 @@
           <b-button-group size="md">
             <b-button v-b-tooltip title="View Details" v-on:click="showDetails(row.item.UID)"><b-icon-eye/></b-button>
             <b-button v-b-tooltip title="Edit Entry" v-on:click="editEntry(row.item.UID)"><b-icon-pencil-square/></b-button>
+            <b-button v-b-tooltip title="Sell" v-on:click="sellEntry(row.item.UID)"><b-icon-cash-stack/></b-button>
             <b-button v-b-tooltip title="Delete Entry" v-on:click="deleteEntry(row.item.UID)"><b-icon-trash/></b-button>
           </b-button-group>
         </template>
@@ -22,6 +23,7 @@
         <b-icon icon="plus-circle-fill" aria-label="Add new entry"></b-icon>
       </b-button>
     </div>
+
     <b-modal
         id="add-entry-modal"
         title="Add new entry"
@@ -51,6 +53,19 @@
           </b-col>
         </b-row>
       </b-container>
+    </b-modal>
+
+    <b-modal id="sell-modal" title="Sell animal" v-model="showSellModal" @ok="handleSell" @hidden="clearSell">
+      <b-row class="my-1" v-for="item in Object.keys(sellValues)" :key="item">
+        <b-col sm="4">
+          <label :for="`field-sell-${item}`">{{ item }}:</label>
+        </b-col>
+        <b-col sm="8">
+          <b-form-datepicker :id="`field-sell-${item}`" v-if="item.includes('date')" v-model="sellValues[item]"></b-form-datepicker>
+          <b-form-input :id="`field-sell-${item}`" v-else-if="item.includes('er')" v-model="sellValues[item]" placeholder="Enter the username of the buyer"></b-form-input>
+          <b-form-input :id="`field-sell-${item}`" v-else v-model="sellValues[item]" :type="'number'"></b-form-input>
+        </b-col>
+      </b-row>
     </b-modal>
   </Layout>
 </template>
@@ -103,7 +118,14 @@ export default {
       isBusy: false,
       showEntryModal: false,
       disableTextFields: false,
-      editData: false
+      editData: false,
+      showSellModal: false,
+      sellValues: {
+        uid: undefined,
+        buyer: undefined,
+        date: undefined,
+        price: undefined
+      }
     }
   },
   metaInfo: {
@@ -169,8 +191,6 @@ export default {
       // Append db_url for when we go on production
       toSend['db_url'] = this.$static.metadata.DB_URL
 
-      console.log(toSend)
-
       // Check if we are editing data or inserting new one
       if (this.editData) {
         // EDITING EXISTING
@@ -182,13 +202,10 @@ export default {
         toSend['uid'] = getCookie('cattleUid')
         eraseCookie('cattleUid')
 
-        console.log(toSend)
-
         axios.post(this.db_url + 'edit_cattle_entry.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
           console.log(resp)
           // Update the data in the table according to the new data
           this.updateTable(resp)
-          this.showEntryModal = false
         }).catch( err => {
           console.error(err)
         })
@@ -212,20 +229,40 @@ export default {
         }).catch( err => {
           console.error(err)
         })
-
-        // Hide the input modal
-        this.showEntryModal = false
-        this.disableTextFields = false
-        this.editData = false
       }
+
+      // Hide the input modal and clear temp variables
+      this.showEntryModal = false
+      this.disableTextFields = false
+      this.editData = false
+      this.clearFields()
     },
     /*** Handlers for the buttons ***/
     showDetails(uid) {
-      // TODO finish this
       // Get the complete data from the database and show on a modal
-      console.log(uid)
-      this.showEntryModal = true
-      this.disableTextFields = true
+      axios.post(this.db_url + 'select_data.php', JSON.stringify({
+        db_url:this.$static.metadata.DB_URL,
+        // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
+        fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
+        uid: uid
+      }), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+
+        console.log(resp)
+        let respItems = []
+        resp.data.forEach(row => {
+          respItems = respItems.concat(row)
+        })
+        this.setFields(respItems)
+
+        // Open a modal for editing data, update on database and then return the updated data for rendering
+        this.showEntryModal = true
+        this.disableTextFields = true
+        this.editData = false
+        setCookie('cattleUid', uid)
+      }).catch( err => {
+        console.error(err)
+      })
+
     },
     editEntry(uid) {
       // There are actually two operations for this
@@ -273,6 +310,28 @@ export default {
         console.error(err)
       })
     },
+    sellEntry(uid) {
+      this.sellValues.uid = uid
+      this.showSellModal = true
+    },
+    clearSell() {
+      console.log("Clearing sell")
+      this.showSellModal = false
+      for (let sellValuesKey in this.sellValues) {
+        this.sellValues[sellValuesKey] = undefined
+      }
+    },
+    handleSell() {
+      console.log(JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}))
+      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/json' } }).then( resp => {
+        console.log(resp)
+        // resp.data should be 1 when the transaction is sucessfull
+        // Setting a new owner is responsability of the sold table transaction "update_owner"
+      }).catch( err => {
+        console.error(err)
+      })
+    },
+    /*** Methods for handling the variables that make all this mess work ***/
     clearFields() {
       Object.keys(this.fields).forEach(key => {
         this.fields[key][0] = ''

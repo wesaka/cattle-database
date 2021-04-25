@@ -5,7 +5,6 @@
       <b-navbar-nav class="nav">
         <g-link class="nav__link" to="/">Home</g-link>
         <g-link class="nav__link" to="/cattle/">Cattle</g-link>
-        <g-link class="nav__link" to="/operations/">Operations</g-link>
         <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
       </b-navbar-nav>
       <b-navbar-nav class="nav ml-auto">
