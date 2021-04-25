@@ -11,7 +11,7 @@ module.exports = function (api) {
   // })
 
   api.loadSource(async store => {
-    store.addMetadata('DB_URL', process.env.NODE_ENV === 'production' ? 'http://awesley.atwebpages.com/' : 'http://localhost/database/')
+    store.addMetadata('DB_URL', process.env.NODE_ENV === 'production' ? 'https://wes.unaux.com/' : 'http://localhost/database/')
   })
 
   api.createPages(({ createPage }) => {
