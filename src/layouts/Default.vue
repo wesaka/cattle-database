@@ -3,9 +3,9 @@
     <b-navbar class="navbar">
       <b-navbar-brand>Ranch Manager</b-navbar-brand>
       <b-navbar-nav class="nav">
-        <g-link class="nav__link" to="/">Home</g-link>
-        <g-link class="nav__link" to="/cattle/">Cattle</g-link>
-        <g-link class="nav__link" to="/ranch/">Ranch Info</g-link>
+        <g-link class="nav__link" :to="loggedIn ? '/' : ''">Home</g-link>
+        <g-link class="nav__link" :to="loggedIn ? '/cattle/' : ''">Cattle</g-link>
+        <g-link class="nav__link" :to="loggedIn ? '/ranch/' : ''">Ranch Info</g-link>
       </b-navbar-nav>
       <b-navbar-nav class="nav ml-auto">
         <b-button v-if="loggedIn" :key="loggedIn" variant="outline-danger" v-on:click="eraseCredentials" href="/">Logout</b-button>
@@ -69,7 +69,7 @@ export default {
         return
       }
 
-      axios.post(this.$static.metadata.DB_URL + 'auth.php', JSON.stringify({db_url:'https://tardy-cleanser.000webhostapp.com', username:u, password:p}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+      axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'auth.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, username:u, password:p}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         if (resp.data === 0) {
           // If not, it means that the user already exists or the request was unsuccessful
           this.eraseCredentials()
@@ -78,6 +78,7 @@ export default {
           // Raise an alert to the user
           this.$refs["modal-incorrect-password"].show()
         } else {
+          console.log('ID returned', resp.data.toString())
           // If the response is anything other than 0 that means we are logged in (and created a new user if it didn't exist before)!
           // The number it returns from the server is the UID of the owner - used for inserting new data in the DB
           setCookie('username', u, 1)

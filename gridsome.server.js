@@ -11,7 +11,7 @@ module.exports = function (api) {
   // })
 
   api.loadSource(async store => {
-    store.addMetadata('DB_URL', process.env.NODE_ENV === 'production' ? process.env.PRODUCTION_DB_URL : 'http://localhost/database/')
+    store.addMetadata('DB_URL', process.env.NODE_ENV === 'production' ? process.env.GRIDSOME_PRODUCTION_DB_URL : 'http://localhost/database/')
   })
 
   api.createPages(({ createPage }) => {

@@ -28,6 +28,7 @@
         id="add-entry-modal"
         title="Add new entry"
         @ok="modalHandleOK"
+        @hidden="clearFields"
         v-model="showEntryModal"
     >
       <b-container fluid class="insert" :key="isBorn">
@@ -133,7 +134,7 @@ export default {
   },
   computed: {
     db_url: function () {
-      return this.$static.metadata.DB_URL
+      return process.env.GRIDSOME_PRODUCTION_DB_URL
     }
   },
   watch: {
@@ -160,6 +161,13 @@ export default {
       this.items = respItems
       this.isBusy = false
     },
+    removeTableEntry(uid) {
+      for (let i = 0; i < this.items.length; i++) {
+        if (this.items[i].UID === uid) {
+          this.items.splice(i, 1)
+        }
+      }
+    },
     /*** Handlers for the insert new entry modal ***/
     modalHandleOK(bvModalEvt) {
       // Prevent the modal from closing
@@ -181,7 +189,11 @@ export default {
       let toSend = {}
       for (const key in this.fields) {
         if (this.fields[key][0] !== '' && this.fields[key][0] !== undefined) {
-          toSend[key] = `'${this.fields[key][0]}'` // Send as string so it doesn't mess up the date
+          if (key === 'purebred') {
+            toSend[key] = this.fields[key][0] ? 1 : 0
+          } else {
+            toSend[key] = `'${this.fields[key][0]}'` // Send as string so it doesn't mess up the date
+          }
         }
       }
 
@@ -189,7 +201,7 @@ export default {
       toSend['owner'] = getCookie('uid')
 
       // Append db_url for when we go on production
-      toSend['db_url'] = this.$static.metadata.DB_URL
+      toSend['db_url'] = process.env.GRIDSOME_PRODUCTION_DB_URL
 
       // Check if we are editing data or inserting new one
       if (this.editData) {
@@ -202,7 +214,8 @@ export default {
         toSend['uid'] = getCookie('cattleUid')
         eraseCookie('cattleUid')
 
-        axios.post(this.db_url + 'edit_cattle_entry.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+        console.log(toSend)
+        axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'edit_cattle_entry.php', JSON.stringify(toSend), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
           console.log(resp)
           // Update the data in the table according to the new data
           this.updateTable(resp)
@@ -211,7 +224,7 @@ export default {
         })
       } else {
         // INSERTING NEW
-        axios.post(this.db_url + 'insert_data.php', toSend, { headers: { 'Content-Type': 'text/json' } }).then( resp => {
+        axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'insert_data.php', JSON.stringify(toSend), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
           console.log(resp)
           // Update the data in the table according to the new data
           if (resp.data === 0) {
@@ -240,8 +253,8 @@ export default {
     /*** Handlers for the buttons ***/
     showDetails(uid) {
       // Get the complete data from the database and show on a modal
-      axios.post(this.db_url + 'select_data.php', JSON.stringify({
-        db_url:this.$static.metadata.DB_URL,
+      axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'select_data.php', JSON.stringify({
+        db_url:process.env.GRIDSOME_PRODUCTION_DB_URL,
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
         uid: uid
@@ -270,7 +283,7 @@ export default {
       // This is done so we don't need to store every single entry locally in the website (Imagine a thousand cattle)
       // 2nd is to get that data and perform an update on mysql
       axios.post(this.db_url + 'select_data.php', JSON.stringify({
-        db_url:this.$static.metadata.DB_URL,
+        db_url:process.env.GRIDSOME_PRODUCTION_DB_URL,
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
         uid: uid
@@ -296,15 +309,12 @@ export default {
     deleteEntry(uid) {
       // Delete the entry in the database and return the updated data for rendering
       // DO NOT PASS THE DATABASE URL WITH THE FUNCTION - PHP IS WEIRD
-      axios.post(this.db_url + 'delete_cattle_entry.php', {db_url:this.$static.metadata.DB_URL, uid:uid}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+      axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'delete_cattle_entry.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, uid:uid}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+        console.log(resp)
         const response = resp.data.toString()
         // Update the data in the table according to the new data
         if (response === "1") {
-          for (let i = 0; i < this.items.length; i++) {
-            if (this.items[i].UID === uid) {
-              this.items.splice(i, 1)
-            }
-          }
+          this.removeTableEntry(uid)
         }
       }).catch( err => {
         console.error(err)
@@ -322,11 +332,14 @@ export default {
       }
     },
     handleSell() {
-      console.log(JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}))
-      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:this.$static.metadata.DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+      console.log(JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, ...this.sellValues}))
+      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         console.log(resp)
         // resp.data should be 1 when the transaction is sucessfull
         // Setting a new owner is responsability of the sold table transaction "update_owner"
+        if (resp.data === 1) {
+          this.removeTableEntry(this.sellValues.uid)
+        }
       }).catch( err => {
         console.error(err)
       })
@@ -355,7 +368,8 @@ export default {
     // 2nd the values JSON.stringify'ed
     // 3rd the username
     // 4th headers Content-Type application/x-www-form-urlencoded
-    axios.post(this.db_url + 'select_data.php', JSON.stringify({db_url:this.db_url, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+    console.log(process.env.GRIDSOME_PRODUCTION_DB_URL)
+    axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'select_data.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
       console.log(resp)
       this.updateTable(resp)
     }).catch( err => {
