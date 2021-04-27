@@ -257,7 +257,8 @@ export default {
         db_url:process.env.GRIDSOME_PRODUCTION_DB_URL,
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
-        uid: uid
+        uid: uid,
+        ownerUid: getCookie('uid')
       }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
 
         console.log(resp)
@@ -282,11 +283,12 @@ export default {
       // 1st get data from the database regarding this UID for showing to the user (that's why we can't do it all on mysql)
       // This is done so we don't need to store every single entry locally in the website (Imagine a thousand cattle)
       // 2nd is to get that data and perform an update on mysql
-      axios.post(this.db_url + 'select_data.php', JSON.stringify({
+      axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'select_data.php', JSON.stringify({
         db_url:process.env.GRIDSOME_PRODUCTION_DB_URL,
         // This is done to get if the cow was bought or not - if returns 0 is bought, if 1 is born locally
         fields:`date_bought IS NULL AS origin,tag,weight_birth,date_born,parent_1,parent_2,breed,purebred`,
-        uid: uid
+        uid: uid,
+        ownerUid: getCookie('uid')
       }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
 
         console.log(resp)
@@ -333,7 +335,7 @@ export default {
     },
     handleSell() {
       console.log(JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, ...this.sellValues}))
-      axios.post(this.db_url + 'sell_cattle.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+      axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'sell_cattle.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, ...this.sellValues}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
         console.log(resp)
         // resp.data should be 1 when the transaction is sucessfull
         // Setting a new owner is responsability of the sold table transaction "update_owner"
@@ -369,7 +371,7 @@ export default {
     // 3rd the username
     // 4th headers Content-Type application/x-www-form-urlencoded
     console.log(process.env.GRIDSOME_PRODUCTION_DB_URL)
-    axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'select_data.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, fields:'UID,tag', username: getCookie('username')}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
+    axios.post(process.env.GRIDSOME_PRODUCTION_DB_URL + 'select_data.php', JSON.stringify({db_url:process.env.GRIDSOME_PRODUCTION_DB_URL, fields:'UID,tag', ownerUid: getCookie('uid')}), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then( resp => {
       console.log(resp)
       this.updateTable(resp)
     }).catch( err => {
